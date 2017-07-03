@@ -72,6 +72,11 @@ var UserSchema = mongoose.Schema({
 	date_created: {
 		type: Date,
 		default: Date.now
+	},
+	
+	admin: {
+		type: Boolean,
+		default: false
 	}
 });
 
