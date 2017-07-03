@@ -19,7 +19,8 @@ var UserSchema = mongoose.Schema({
 	username: {
 		type: String,
 		index:true,
-		lowercase: true
+		lowercase: true,
+		unique: true
 	},
 	
 	password: {
@@ -27,7 +28,8 @@ var UserSchema = mongoose.Schema({
 	},
 	
 	email: {
-		type: String
+		type: String,
+		unique: true
 	},
 	
 	region: {

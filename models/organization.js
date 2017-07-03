@@ -36,6 +36,7 @@ var OrganizationSchema = mongoose.Schema({
 		type: String
 	},
 	
+	//This is unique to each organization
 	code: {
 		type: String
 	}

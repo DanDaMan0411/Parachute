@@ -53,24 +53,41 @@ router.post('/register', function(req, res){
 			errors: errors,
 		});
 	}else{
-		var newUser = new User({
-			first_name: first_name,
-			last_name: last_name,
-			age: age,
-			email: email,
-			region: region,
-			username: username,
-			password: password,
-			account_type: account_type,
-		});
-		
-		User.createUser(newUser, function(err, user){
-			if(err) throw err;
-		});
-		
-		req.flash('success_msg', 'You are registered and can now login');
-		
-		res.redirect('/users/login');
+		User.findOne({'email': email}, function(err, user){
+			//If user doesn't equal null that means that a user with the email already exists
+			if(user != null){
+				req.flash('error_msg', user.email + ' is already associated with an account.');
+				res.redirect('/users/register');	
+			}else{
+				//Checks to see if username is taken
+				User.findOne({'username': username}, function(err, user){
+					if (user != null ){
+						req.flash('error_msg', "The Username " +user.username + " is taken.");
+						res.redirect('/users/register');	
+					}else{
+						//This runs if the email is not yet taken and registers the account
+						var newUser = new User({
+							first_name: first_name,
+							last_name: last_name,
+							age: age,
+							email: email,
+							region: region,
+							username: username,
+							password: password,
+							account_type: account_type,
+						});
+						
+						User.createUser(newUser, function(err, user){
+							if(err) throw err;
+						});
+						
+						req.flash('success_msg', 'You are registered and can now login');
+						
+						res.redirect('/users/login');
+					}
+				})
+			}
+		})
 	}
 
 });
