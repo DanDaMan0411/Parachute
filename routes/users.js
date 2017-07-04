@@ -30,9 +30,7 @@ router.post('/register', function(req, res){
 	var password = req.body.password;
 	var password2 = req.body.password2;
 	var account_type = req.body.account_type;
-	
-	console.log(account_type)
-	
+		
 	//Validation
 	req.checkBody('first_name', 'First name is required').notEmpty();
 	req.checkBody('last_name', 'Last name is required').notEmpty();

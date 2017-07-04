@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var User = require('../models/user');
+var Organization = require('../models/organization');
 
 //Get homepage
 router.get('/', ensureAuthenticated, function(req, res){
@@ -40,6 +41,52 @@ router.get('/chat', ensureAuthenticated, function(req, res){
 
 router.get('/make_org', ensureAuthenticated, function(req, res){
 	res.render('make_org');
+});
+
+router.post('/make_org', ensureAuthenticated, function(req, res){
+	var name = req.body.name;
+	var region = req.body.region;
+	var code = req.body.code;
+	
+	//The leader of the organization is the user that created it
+	var leader = req.user.username;
+	
+	req.checkBody('name', 'Organization name is required').notEmpty();
+	req.checkBody('region', 'Organization region is required').notEmpty();
+	req.checkBody('code', 'Organization code is required').notEmpty();
+	
+	var errors = req.validationErrors();
+
+	
+	if(errors){
+		res.render('register', {
+			errors: errors,
+		});
+	}else{
+		//Checks to see if organization code is taken
+		Organization.findOne({'code': code}, function(err, org){
+			if (org != null ){
+				req.flash('error_msg', "The code " + code + " is taken.");
+				res.redirect('/make_org');	
+			}else{
+				//This runs if the email is not yet taken and registers the account
+				var newOrg = new Organization({
+					name: name,
+					region: region,
+					code: code,
+					leader: leader,
+				});
+				
+				Organization.createOrganization(newOrg, function(err, org){
+					if(err) throw err;
+				});
+				
+				req.flash('success_msg', 'You have created the organization ' + name);
+				
+				res.redirect('/');
+			}
+		});
+	}
 });
 
 router.get('/wall_of_love', ensureAuthenticated, function(req, res){

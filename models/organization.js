@@ -20,7 +20,11 @@ var OrganizationSchema = mongoose.Schema({
 	zip: {
 		type: String,
 		default: null
-	}
+	},
+	
+	region: {
+		type: String,
+	},
 	
 	phone_number: {
 		type: String,
@@ -38,7 +42,8 @@ var OrganizationSchema = mongoose.Schema({
 	
 	//This is unique to each organization
 	code: {
-		type: String
+		type: String,
+		lowercase: true
 	},
 	
 	members: {
