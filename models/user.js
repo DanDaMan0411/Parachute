@@ -76,7 +76,7 @@ var UserSchema = mongoose.Schema({
 		default: false
 	},
 	
-	joined_orgs: {
+	orgs: {
 		type: Array,
 		default: []
 	},

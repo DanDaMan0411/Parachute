@@ -26,7 +26,7 @@ router.get('/', ensureAuthenticated, function(req, res){
 	var context = {
 		first_name: req.user.first_name,
 		last_name: req.user.last_name,
-		joined_orgs: req.user.joined_orgs,
+		orgs: req.user.orgs,
 		is_student: is_student,
 		is_teacher: is_teacher,
 		is_counselor: is_counselor,
@@ -110,11 +110,11 @@ router.post('/org_code', ensureAuthenticated, function(req, res){
 		});
 	}else{
 		User.getUserByUsername(req.user.username, function(err, user){
-			var joined_orgs = user.joined_orgs;
+			var orgs = user.orgs;
 			console.log();
-			console.log(joined_orgs);
-			console.log(joined_orgs.concat(org_code));
-			User.update({joined_orgs: joined_orgs.concat(org_code)}, function(err, result){
+			console.log(orgs);
+			console.log(orgs.concat(org_code));
+			User.update({orgs: orgs.concat(org_code)}, function(err, result){
 				if (err) throw err;
 			});
 		});
