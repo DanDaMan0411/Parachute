@@ -36,11 +36,6 @@ var UserSchema = mongoose.Schema({
 		type: String
 	},
 	
-	class_code: {
-		type: String,
-		default: null
-	},
-	
 	////////////////////
 	//Status Key	   /
 	////////////////////
@@ -79,7 +74,12 @@ var UserSchema = mongoose.Schema({
 	admin: {
 		type: Boolean,
 		default: false
-	}
+	},
+	
+	joined_orgs: {
+		type: Array,
+		default: []
+	},
 });
 
 var User = module.exports = mongoose.model('User', UserSchema);

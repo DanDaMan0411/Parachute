@@ -39,7 +39,12 @@ var OrganizationSchema = mongoose.Schema({
 	//This is unique to each organization
 	code: {
 		type: String
-	}
+	},
+	
+	members: {
+		type: Array,
+		default: []
+	},
 });
 
 var Organization = module.exports = mongoose.model('Organization', OrganizationSchema);

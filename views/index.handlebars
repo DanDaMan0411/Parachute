@@ -1,3 +1,13 @@
 <h2 class = "page-header">Hi {{first_name}}</h2>
 <p>Welcome to the dashboard</p>
-<a href="/class_code" class="btn btn-primary">Join a class</a>
+{{#if is_student}}
+	<a href="/org_code" class="btn btn-primary">Join an Organization</a>
+{{/if}}
+
+{{#if is_teacher}}
+	<a href="/make_org" class="btn btn-primary">Create an Organization</a>
+{{/if}}
+
+{{#if is_counselor}}
+	<a href="/make_org" class="btn btn-primary">Create an Organization</a>
+{{/if}}
