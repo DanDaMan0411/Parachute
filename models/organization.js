@@ -43,7 +43,8 @@ var OrganizationSchema = mongoose.Schema({
 	//This is unique to each organization
 	code: {
 		type: String,
-		lowercase: true
+		lowercase: true,
+		unique: true
 	},
 	
 	members: {
