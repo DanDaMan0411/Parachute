@@ -49,11 +49,6 @@ var UserSchema = mongoose.Schema({
 		default: 2
 	},
 	
-	organization: {
-		type: String,
-		default: null
-	},
-	
 	////////////////////
 	//Account type Key /
 	////////////////////

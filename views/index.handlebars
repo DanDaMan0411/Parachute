@@ -1,7 +1,25 @@
 <h2 class = "page-header">Hi {{first_name}}</h2>
-<p>Welcome to the dashboard</p>
 {{#if is_student}}
 	<a href="/org_code" class="btn btn-primary">Join an Organization</a>
+	<ul class="list-group">
+		{{#if orgs}}
+			<h3>Organizations I Am In</h3>
+			{{#each orgs}}
+				<li class="list-group-item">
+					{{this.name}}
+					<div class="dropdown">
+						<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu">
+							<li><a href="#">Leave</a></li>
+						</ul>
+					</div>
+				</li>
+			{{/each}}
+		{{/if}}
+	</ul>
+	
 {{/if}}
 
 {{#if is_teacher}}
@@ -10,4 +28,14 @@
 
 {{#if is_counselor}}
 	<a href="/make_org" class="btn btn-primary">Create an Organization</a>
+	<ul class="list-group">
+		{{#if orgs}}
+			<h3>Organizations I Lead</h3>
+			{{#each orgs}}
+				<a href="#" class="list-group-item">
+					{{this.name}}
+				</a>
+			{{/each}}
+		{{/if}}
+	</ul>
 {{/if}}

@@ -51,6 +51,11 @@ var OrganizationSchema = mongoose.Schema({
 		type: Array,
 		default: []
 	},
+	
+	active: {
+		type: Boolean,
+		default: true
+	}
 });
 
 var Organization = module.exports = mongoose.model('Organization', OrganizationSchema);

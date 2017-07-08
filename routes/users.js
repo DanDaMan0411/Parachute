@@ -83,9 +83,9 @@ router.post('/register', function(req, res){
 						
 						res.redirect('/users/login');
 					}
-				})
+				});
 			}
-		})
+		});
 	}
 
 });

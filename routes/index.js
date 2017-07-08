@@ -8,13 +8,64 @@ var Organization = require('../models/organization');
 
 
 
-//Get homepage
 router.get('/', ensureAuthenticated, function(req, res){
+	/*
+	 * req.user.orgs data gets run through returnOrgInfo function
+	 * to fetch the detailed information of the orgs the user is 
+	 * currently in. Page is loaded inside loadIndexPage function
+	 */
+	if ((req.user.orgs).length > 0){
+		returnOrgInfo(req.user.orgs, req, res);
+	////
+	
+	/*
+	 * If the user is not in any orgs, then skips
+	 * the function where the data is fetched and
+	 * goes straight to loading page.
+	 * Otherwise, page doesn't load.
+	 */
+	}else{
+		loadIndexPage(req, res, null)
+	}
+	////
+});
+
+/*
+ * Takes an input of org_codes and returns an
+ * object with each organization's information.
+ * 
+ * The only reason req and res are passed through
+ * here is because it is required to load the page
+ * through the loadIndexPage function
+ */
+function returnOrgInfo(org_code_list, req, res){
+	var list_length = org_code_list.length;
+	var org_info_object = {};
+
+	for (var i = 0; i < list_length; i++){
+		Organization.getOrganizationByCode(org_code_list[i], function(err, organization){			
+			org_info_object[organization.code] = organization; 
+			
+			if (Object.keys(org_info_object).length == list_length){
+				loadIndexPage(req, res, org_info_object);
+			}
+		});
+	}
+}
+////
+
+/*
+ * Index page gets loaded here after organization
+ * data is fetched from returnOrgInfo function
+ */
+function loadIndexPage(req, res, org_info_object){	
+	/*
+	* Different content is displayed on dashboard depending on the type of account the user has
+	* I.E. teachers and counselors cannot join organizations, they can only make them
+	* This is set up like this because handlebars can only handle true or false operators
+	*/
 	var account_type = req.user.account_type;
 	
-	//Different content is displayed on dashboard depending on the type of account the user has
-	//I.E. teachers and counselors cannot join organizations, they can only make them
-	//This is set up like this because handlebars can only handle true or false operators
 	var is_student;
 	var is_teacher;
 	var is_counselor;
@@ -26,6 +77,7 @@ router.get('/', ensureAuthenticated, function(req, res){
 	}else if (account_type === "c"){
 		is_counselor = true;
 	}
+	////
 	
 	var context = {
 		first_name: req.user.first_name,
@@ -34,10 +86,11 @@ router.get('/', ensureAuthenticated, function(req, res){
 		is_student: is_student,
 		is_teacher: is_teacher,
 		is_counselor: is_counselor,
+		orgs: org_info_object
 	}
 	
 	res.render('index', context);
-});
+}
 
 
 
@@ -58,13 +111,17 @@ router.get('/make_org', ensureAuthenticated, ensureCounselor, function(req, res)
 
 
 
-
+/*
+ * Runs when counselor creates a new organization
+ */
 router.post('/make_org', ensureAuthenticated, ensureCounselor, function(req, res){
 	var name = req.body.name;
 	var region = req.body.region;
 	var code = req.body.code;
 	
-	//The leader of the organization is the user that created it
+	/*
+	 * The leader of the organization is the user that created it
+	 */
 	var leader = req.user.username;
 	
 	req.checkBody('name', 'Organization name is required').notEmpty();
@@ -79,31 +136,64 @@ router.post('/make_org', ensureAuthenticated, ensureCounselor, function(req, res
 			errors: errors,
 		});
 	}else{
-		//Checks to see if organization code is taken
 		Organization.findOne({'code': code}, function(err, org){
-			if (org != null ){
-				req.flash('error_msg', "The code " + code + " is taken.");
-				res.redirect('/make_org');	
-			}else{
-				//This runs if the email is not yet taken and registers the account
-				var newOrg = new Organization({
-					name: name,
-					region: region,
-					code: code,
-					leader: leader,
-				});
-				
-				Organization.createOrganization(newOrg, function(err, org){
-					if(err) throw err;
-				});
-				
-				req.flash('success_msg', 'You have created the organization ' + name);
-				
-				res.redirect('/');
-			}
+			handleUserMakeOrg(err, org, req, res, name, region, code, leader);
 		});
 	}
 });
+
+/*
+ * Runs when user wants to create an organization
+ * Posted to /make_org page
+ */
+function handleUserMakeOrg(err, org, req, res, name, region, code, leader){
+	/*
+	 * Checks to see if organization code is taken
+	 */
+	if (org != null ){
+		req.flash('error_msg', "The code " + code + " is taken.");
+		res.redirect('/make_org');
+	////
+	
+	
+	}else{
+		/*
+		 * Creates a new Organization instance
+		 * and saves it in the database
+		 */
+		var newOrg = new Organization({
+			name: name,
+			region: region,
+			code: code,
+			leader: leader,
+		});
+		
+		Organization.createOrganization(newOrg, function(err, org){
+			if(err) throw err;
+		});
+		////
+		
+		
+		/*
+		 * Updates the orgs a user is in by 
+		 * adding the org they just created
+		 */
+		var orgs = req.user.orgs; 
+	
+		User.getUserByUsername(req.user.username, function(err, user){
+			user.update({orgs: orgs.concat(code)}, throwError);
+		});
+		////
+		
+		req.flash('success_msg', 'You have created the organization ' + name);
+		
+		res.redirect('/');
+	}
+}
+
+
+
+
 
 router.get('/wall_of_love', ensureAuthenticated, function(req, res){
 	res.render('wall_of_love');
@@ -116,8 +206,9 @@ router.get('/org_code', ensureAuthenticated, ensureStudent, function(req, res){
 
 
 
-
-//This handles input when user submits an organization code to join
+/*
+* Handles input when user submits an organization code to join
+*/
 router.post('/org_code', ensureAuthenticated, ensureStudent, function(req, res){
 	var org_code = req.body.org_code;
 	
