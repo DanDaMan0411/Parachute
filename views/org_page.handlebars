@@ -1,1 +1,18 @@
-ORG PAGE
+<div class="jumbotron">
+	<h1>{{org.name}}</h1>
+	<ul class="list-group">
+		<li class="list-group-item">Leader: {{org.leader}}</li>
+		<li class="list-group-item">Region: {{org.region}}</li>
+		<li class="list-group-item">Region: {{org.code}}</li>
+	</ul>
+	{{#if is_student}}
+		{{#if user_in_org}}
+			<p><a class="btn btn-primary btn-lg" href="#" role="button">Leave</a></p>
+		{{/if}}
+	{{/if}}
+</div>
+{{#if is_counselor}}
+	<div>
+		<h2 class="page-header">Manage Members</h2>
+	</div>
+{{/if}}

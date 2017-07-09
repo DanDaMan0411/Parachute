@@ -55,6 +55,18 @@ var OrganizationSchema = mongoose.Schema({
 	active: {
 		type: Boolean,
 		default: true
+	},
+
+	////////////////////
+	//Join Setting Key /
+	////////////////////
+	//o: Open          /
+	//r: Request       /
+	//c: Closed        /
+	////////////////////
+	join_setting: {
+		type: String,
+		default: 'o'
 	}
 });
 
