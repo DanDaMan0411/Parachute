@@ -75,6 +75,11 @@ var UserSchema = mongoose.Schema({
 		type: Array,
 		default: []
 	},
+	
+	inbox: {
+		type: Array,
+		default: []
+	}
 });
 
 var User = module.exports = mongoose.model('User', UserSchema);
