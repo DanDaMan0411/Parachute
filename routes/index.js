@@ -275,7 +275,7 @@ function handleUserJoinOrg(err, organization, org_code, req, res){
 				/*
 				 * If successful, redirects back to dashboard displaying success message
 				 */
-				req.flash('success_msg', 'You have successfully joined an organization!');
+				req.flash('success_msg', 'You have joined the ' + organization.name + '!');
 				res.redirect('/');
 				////
 			}

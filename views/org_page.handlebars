@@ -17,4 +17,26 @@
 	<div>
 		<h2 class="page-header">Manage Members</h2>
 	</div>
+	{{#each org.members}}
+		<ul class="list-group">
+			<li class="list-group-item">
+				{{this}}
+				<div class="dropdown">
+				<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+					 <span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<form id="rem_user_form" method="post" action="/orgs/rem_user">
+						<input name="org_code" type="hidden" value="{{../org.code}}">
+						<input name="username" type="hidden" value="{{this}}">
+					</form>
+					<li><a onClick="submitRemUserForm()" type="submit" href="#">Remove</a></li>
+					<li><a href="#">Send Message</a></li>
+				</ul>
+				</div>
+			</li>
+		</ul>
+	{{/each}}
 {{/if}}
+
+<script type='text/javascript' src='/js/org_page_script.js'></script>

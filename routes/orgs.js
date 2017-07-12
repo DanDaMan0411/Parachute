@@ -43,35 +43,6 @@ router.get('/', ensureAuthenticated, function(req, res){
 router.post('/leave_org', ensureAuthenticated, function(req, res){
 	var org_code = req.body.org_code;
 	
-	console.log(org_code);
-	
-	/*
-	 * Removes user as a member of the organization
-	 */
-	Organization.getOrganizationByCode(org_code, function(err, org){
-		if (err) throw err;
-		
-		var new_members = org.members;
-		
-		/*
-		 * Index of the user that wants to leave
-		 */
-		var user_index = new_members.indexOf(req.user.username);
-		
-		/*
-		 * Makes sure user is in members list
-		 * Should always be the case, just precautionary
-		 */
-		if (user_index >= 0){
-			new_members.splice(user_index, 1);
-		}
-		
-		
-		org.update({members: new_members}, throwError);
-	});
-	
-	
-	
 	/*
 	 * Removes organization from user orgs list
 	 */
@@ -96,10 +67,109 @@ router.post('/leave_org', ensureAuthenticated, function(req, res){
 		user.update({orgs: new_orgs}, throwError);
 	 });
 	
-	req.flash('success_msg', 'You have successfully left the organization');
-	res.redirect('/');
+	 
+	/*
+	 * Removes user as a member of the organization
+	 */
+	Organization.getOrganizationByCode(org_code, function(err, org){
+		if (err) throw err;
+		
+		var new_members = org.members;
+		
+		/*
+		 * Index of the user that wants to leave
+		 */
+		var user_index = new_members.indexOf(req.user.username);
+		
+		/*
+		 * Makes sure user is in members list
+		 * Should always be the case, just precautionary
+		 */
+		if (user_index >= 0){
+			new_members.splice(user_index, 1);
+		}
+		
+		org.update({members: new_members}, throwError);
+		
+		
+		/*
+		 * redirect happens here to fetch 
+		 * the organization's name
+		 */
+		req.flash('success_msg', 'You have left the ' + org.name);
+		res.redirect('/');
+	});
 });
 
+
+
+
+/*
+ * Removes specified user from desired organization
+ */
+router.post('/rem_user', ensureAuthenticated, function(req, res){
+	var org_code = req.body.org_code;
+	var username = req.body.username;
+	
+	 
+	/*
+	 * Removes user as a member of the organization
+	 */
+	Organization.getOrganizationByCode(org_code, function(err, org){
+		if (err) throw err;
+		
+		var new_members = org.members;
+		
+		/*
+		 * Index of the user that wants to leave
+		 */
+		var user_index = new_members.indexOf(username);
+		
+		/*
+		 * Makes sure user is in members list
+		 * Should always be the case, just precautionary
+		 */
+		if (user_index >= 0){
+			new_members.splice(user_index, 1);
+		}
+		
+		console.log(new_members)
+		
+		org.update({members: new_members}, throwError);
+	});
+	
+	/*
+	 * Removes organization from user orgs list
+	 */
+	 User.getUserByUsername(username, function(err, user){
+		if (err) throw err;
+		
+		var new_orgs = user.orgs;
+		 
+		/*
+		 * Index of the org  wanted to leave
+		 */
+		var org_index = new_orgs.indexOf(org_code);
+		
+		/*
+		 * Makes sure org is in orgs list
+		 * Should always be the case, just precautionary
+		 */
+		if (org_index >= 0){
+			new_orgs.splice(org_index, 1);
+		}
+		
+		user.update({orgs: new_orgs}, throwError);
+		
+		req.flash('success_msg', 'You have removed the user');
+	
+		/*
+		 * redirects to the same org page 
+		 * the user was previously on
+		 */
+		res.redirect('back');
+	 });
+});
 
 
 

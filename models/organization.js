@@ -67,6 +67,11 @@ var OrganizationSchema = mongoose.Schema({
 	join_setting: {
 		type: String,
 		default: 'o'
+	},
+	
+	banned_users: {
+		type: Array,
+		default: []	
 	}
 });
 
