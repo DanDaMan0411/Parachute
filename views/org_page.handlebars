@@ -3,11 +3,13 @@
 	<ul class="list-group">
 		<li class="list-group-item">Leader: {{org.leader}}</li>
 		<li class="list-group-item">Region: {{org.region}}</li>
-		<li class="list-group-item">Region: {{org.code}}</li>
 	</ul>
 	{{#if is_student}}
 		{{#if user_in_org}}
-			<p><a class="btn btn-primary btn-lg" href="#" role="button">Leave</a></p>
+			<form id="leave_org_form" method="post" action="/orgs/leave_org">
+				<input name="org_code" type="hidden" value="{{org.code}}">
+				<button type="submit" class="btn btn-primary">Leave</button>
+			</form>
 		{{/if}}
 	{{/if}}
 </div>
