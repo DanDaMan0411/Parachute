@@ -1,21 +1,17 @@
-<h2 class = "page-header">Hi {{first_name}}</h2>
 {{#if is_student}}
 	<a href="/org_code" class="btn btn-primary">Join an Organization</a>
 	<ul class="list-group">
 		{{#if orgs}}
 			<h3>Organizations I Am In</h3>
 			{{#each orgs}}
-				<li class="list-group-item">
-					{{this.name}}
-					<div class="dropdown">
-						<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-							<span class="caret"></span>
-						</button>
-						<ul class="dropdown-menu">
-							<li><a href="#">Leave</a></li>
-						</ul>
-					</div>
-				</li>
+				<ul class="list-group">
+					<form id="org_info_form" method="get" action="/orgs/">
+						<input name="org_code" type="hidden" value="{{this.code}}">
+						<a onClick="submitOrgInfoForm()" type="submit" class="list-group-item">
+							{{this.name}}
+						</a>
+					</form>
+				</ul>
 			{{/each}}
 		{{/if}}
 	</ul>
@@ -32,10 +28,15 @@
 		{{#if orgs}}
 			<h3>Organizations I Lead</h3>
 			{{#each orgs}}
-				<a href="#" class="list-group-item">
-					{{this.name}}
-				</a>
+				<form id="org_info_form" method="get" action="/orgs/">
+					<input name="org_code" type="hidden" value="{{this.code}}">
+					<a onClick="submitOrgInfoForm()" type="submit" class="list-group-item">
+						{{this.name}}
+					</a>
+				</form>
 			{{/each}}
 		{{/if}}
 	</ul>
 {{/if}}
+
+<script type='text/javascript' src='/js/index_script.js'></script>

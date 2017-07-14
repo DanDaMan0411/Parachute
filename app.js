@@ -15,6 +15,7 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/loginapp');
 var db = mongoose.connection;
 
+var orgs = require('./routes/orgs');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
@@ -76,6 +77,7 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use('/orgs', orgs);
 app.use('/', routes);
 app.use('/users', users);
 
