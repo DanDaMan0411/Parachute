@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcryptjs');
 
-// User Schema
 var OrganizationSchema = mongoose.Schema({
 	name: {
 		type: String
