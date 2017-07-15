@@ -82,10 +82,42 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 	var errors = req.validationErrors();
 	
 	if(errors){
-		res.render('/', {
-			errors: errors,
-		});
+		/*
+		 * Since validation is only checking for message
+		 * can do it this way.
+		 * Seems kinda like a cheat to do it this way,
+		 * may revisit
+		 */
+		req.flash('error_msg', 'Message is required');
+		res.redirect('back');
 	}else{
+		User.getUserByUsername(recipient, function(err, user){
+			if (err) throw err;
+			
+			/*
+			 * Checks to see if recipient exists
+			 * Should always be the case, but just precautionary
+			 */
+			if (user){
+				handleNewInboxMsg(user, message, id, sender, can_reply, recipient, req, res);
+			}else{
+				req.flash('error_msg', 'User you wanted to send message to not found.');
+				res.redirect('back');
+			}
+		})
+	}
+});
+
+/*
+ * Adds new inbox message id to user's inbox list in database
+ * Then adds new inbox message to inbox schema database
+ */
+function handleNewInboxMsg(user, message, id, sender, can_reply, recipient, req, res){
+	var new_inbox = user.inbox;
+				
+	user.update({inbox: new_inbox.concat(id)}, function(err, result){
+		if (err) throw err;
+		
 		var newInbox = new Inbox({
 			message: message,
 			id: id,
@@ -100,10 +132,8 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 		
 		req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
 		res.redirect('back');
-	}
-});
-
-
+	});
+}
 
 
 
