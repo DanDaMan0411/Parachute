@@ -31,11 +31,44 @@
 						<input name="username" type="hidden" value="{{this}}">
 					</form>
 					<li><a onClick="submitRemUserForm()" type="submit" href="#">Remove</a></li>
-					<li><a href="#">Send Message</a></li>
+					<form id="send_msg_form" method="post" action="/orgs/send_msg">
+						<input name="recipient" type="hidden" value="{{this}}">
+						<input name="username" type="hidden" value="{{this}}">
+					</form>
+					<li><a href="#" data-toggle="modal" data-target="#{{this}}_send_msg_modal">Send Message</a></li>
 				</ul>
 				</div>
 			</li>
-		</ul>
+		</ul>		
+		
+		<!-- Modal -->
+		<div class="modal fade" id="{{this}}_send_msg_modal" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Send {{this}} a message</h4>
+					</div>
+					<div class="modal-body">
+						<form id="{{this}}_send_msg_form" method="post" action="/orgs/send_msg">
+							<input name="recipient" type="hidden" value="{{this}}">
+							<div class="form-group">
+								<label>Message</label>
+								<textarea class="form-control" name="message" placeholder="Enter you message here..."></textarea>
+							</div>
+							<div class="checkbox">
+								<label><input type="checkbox" name="can_reply">Can Reply</label>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button onClick="submitSendMsgForm('{{this}}_send_msg_form')" type="button" class="btn btn-default" data-dismiss="modal">Submit</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
 	{{/each}}
 {{/if}}
 

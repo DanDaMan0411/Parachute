@@ -5,3 +5,8 @@
 function submitRemUserForm(){
 	document.getElementById("rem_user_form").submit();
 }
+
+
+function submitSendMsgForm(form_id){
+	document.getElementById(form_id).submit();
+}

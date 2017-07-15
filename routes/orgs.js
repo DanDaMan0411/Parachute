@@ -3,6 +3,7 @@ var router = express.Router();
 
 var User = require('../models/user');
 var Organization = require('../models/organization');
+var Inbox = require('../models/inbox');
 
 /*
  * Displays page of queried organization
@@ -37,6 +38,7 @@ router.get('/', ensureAuthenticated, function(req, res){
 
 
 
+
 /*
  * Leaves requested organization
  */
@@ -52,6 +54,55 @@ router.post('/leave_org', ensureAuthenticated, function(req, res){
 		res.redirect('/');
 	});
 });
+
+
+
+
+
+/*
+ * Leaves requested organization
+ */
+router.post('/send_msg', ensureAuthenticated, function(req, res){
+	var message = req.body.message;
+	var id = generateRandomString();
+	var sender = req.user.username;
+	var recipient = req.body.recipient;
+	
+	/*
+	 * If checked, value will be 'on'
+     * If not checked, value will be 'undefined'
+	 */
+	var can_reply = false
+	if (req.body.can_reply === "on"){
+		can_reply = true;
+	}
+	
+	req.checkBody('message', 'Message is required').notEmpty();
+	
+	var errors = req.validationErrors();
+	
+	if(errors){
+		res.render('/', {
+			errors: errors,
+		});
+	}else{
+		var newInbox = new Inbox({
+			message: message,
+			id: id,
+			sender: sender,
+			can_reply: can_reply,
+			recipient: recipient,
+		});
+		
+		Inbox.createInbox(newInbox, function(err, inbox){
+			if(err) throw err;
+		});
+		
+		req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
+		res.redirect('back');
+	}
+});
+
 
 
 
@@ -126,9 +177,7 @@ function removeUserFromOrg(username, org_code, redirectDestination){
 		if (user_index >= 0){
 			new_members.splice(user_index, 1);
 		}
-		
-		console.log(new_members)
-		
+				
 		org.update({members: new_members}, throwError);
 		
 		redirectDestination(org.name);
@@ -190,6 +239,16 @@ function ensureAuthenticated(req, res, next){
 	}else{
 		res.redirect('/users/login');
 	}
+}
+
+
+
+
+/*
+ * Generates a string roughly 20 characters long
+ */
+function generateRandomString(){
+	return (Math.random()*1e32).toString(36);
 }
 
 module.exports = router;

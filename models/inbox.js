@@ -20,8 +20,18 @@ var InboxSchema = mongoose.Schema({
 	},
 	
 	viewed: {
-		type: Boolean
-	}
+		type: Boolean,
+		default: true
+	},
+	
+	timestamp: {
+		type: Date,
+		default: Date.now
+	},
+	
+	recipient: {
+		type: String,
+	},
 });
 
 var Inbox = module.exports = mongoose.model('Inbox', InboxSchema);
