@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
+var _ = require('underscore');
+
 var User = require('../models/user');
 var Organization = require('../models/organization');
 
@@ -59,19 +61,22 @@ router.get('/', ensureAuthenticated, function(req, res){
  */
 function insertOrgInfo(req, res, context, org_code_list){
 	var list_length = org_code_list.length;
-	var org_info_object = {};
-	
-	console.log(org_code_list);
-	
+	var org_info_list = [];
+		
 	for (var i = 0; i < list_length; i++){
 		Organization.getOrganizationByCode(org_code_list[i], function(err, organization){			
-			org_info_object[organization.code] = organization; 
+			org_info_list.push(organization) 
 			
-			if (Object.keys(org_info_object).length == list_length){
-				context.orgs = org_info_object;
-				
-				console.log(org_info_object)
-				
+			if (org_info_list.length == list_length){
+				/*
+				 * The _.sortBy sorts the org_info_list in 
+				 * alphabetical order based on the name.
+				 * 
+				 * Without it, the list is randomly ordered
+				 * each time the page is loaded
+				 */
+				context.orgs = _.sortBy(org_info_list, 'name');
+								
 				/*
 				 * Fetches next data item for context, which is account_type
 				 */
@@ -84,10 +89,10 @@ function insertOrgInfo(req, res, context, org_code_list){
 
 function insertAccountTypeInfo(req, res, context, account_type){
 	/*
-	* Different content is displayed on dashboard depending on the type of account the user has
-	* I.E. teachers and counselors cannot join organizations, they can only make them
-	* This is set up like this because handlebars can only handle true or false operators
-	*/
+	 * Different content is displayed on dashboard depending on the type of account the user has
+	 * I.E. teachers and counselors cannot join organizations, they can only make them
+	 * This is set up like this because handlebars can only handle true or false operators
+	 */
 	var is_student;
 	var is_teacher;
 	var is_counselor;
