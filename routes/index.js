@@ -6,26 +6,42 @@ var Organization = require('../models/organization');
 
 
 
-
-
+////////////////////////////////////////
+//Data Fetch Structure order
+//
+//(If one context key is skipped,
+//then go to next in line)
+//
+//>>first_name, last_name
+//
+//>>orgs
+//
+//>>is_student, is_counselor, is_teacher
+////////////////////////////////////////
 router.get('/', ensureAuthenticated, function(req, res){
+	var context = {
+		first_name: req.user.first_name,
+		last_name: req.user.last_name,
+	}
+	
 	/*
 	 * req.user.orgs data gets run through returnOrgInfo function
 	 * to fetch the detailed information of the orgs the user is 
 	 * currently in. Page is loaded inside loadIndexPage function
 	 */
 	if ((req.user.orgs).length > 0){
-		returnOrgInfo(req.user.orgs, req, res);
+		insertOrgInfo(req, res, context, req.user.orgs);
 	////
-	
+
+
 	/*
 	 * If the user is not in any orgs, then skips
-	 * the function where the data is fetched and
-	 * goes straight to loading page.
-	 * Otherwise, page doesn't load.
+	 * the function where the data is fetched and 
+	 * goes to fetching account_type info
 	 */
 	}else{
-		loadIndexPage(req, res, null)
+		context.orgs = null;
+		insertAccountTypeInfo(req, res, context, req.user.account_type);
 	}
 	////
 });
@@ -37,8 +53,11 @@ router.get('/', ensureAuthenticated, function(req, res){
  * The only reason req and res are passed through
  * here is because it is required to load the page
  * through the loadIndexPage function
+ * 
+ * Inserts org_info_object into the context 
+ * that is passed  through as a parameter
  */
-function returnOrgInfo(org_code_list, req, res){
+function insertOrgInfo(req, res, context, org_code_list){
 	var list_length = org_code_list.length;
 	var org_info_object = {};
 
@@ -47,25 +66,24 @@ function returnOrgInfo(org_code_list, req, res){
 			org_info_object[organization.code] = organization; 
 			
 			if (Object.keys(org_info_object).length == list_length){
-				loadIndexPage(req, res, org_info_object);
+				context.orgs = org_info_object;
+				
+				/*
+				 * Fetches next data item for context, which is account_type
+				 */
+				insertAccountTypeInfo(req, res, context, req.user.account_type);
 			}
 		});
 	}
 }
 ////
 
-/*
- * Index page gets loaded here after organization
- * data is fetched from returnOrgInfo function
- */
-function loadIndexPage(req, res, org_info_object){	
+function insertAccountTypeInfo(req, res, context, account_type){
 	/*
 	* Different content is displayed on dashboard depending on the type of account the user has
 	* I.E. teachers and counselors cannot join organizations, they can only make them
 	* This is set up like this because handlebars can only handle true or false operators
 	*/
-	var account_type = req.user.account_type;
-	
 	var is_student;
 	var is_teacher;
 	var is_counselor;
@@ -79,16 +97,18 @@ function loadIndexPage(req, res, org_info_object){
 	}
 	////
 	
-	var context = {
-		first_name: req.user.first_name,
-		last_name: req.user.last_name,
-		orgs: req.user.orgs,
-		is_student: is_student,
-		is_teacher: is_teacher,
-		is_counselor: is_counselor,
-		orgs: org_info_object
-	}
+	context.is_student = is_student;
+	context.is_counselor = is_counselor;
+	context.is_teacher = is_teacher;
 	
+	loadIndexPage(req, res, context);
+}
+
+/*
+ * Index page gets loaded here after organization
+ * data is fetched from returnOrgInfo function
+ */
+function loadIndexPage(req, res, context){
 	res.render('index', context);
 }
 
