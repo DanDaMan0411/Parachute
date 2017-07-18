@@ -60,13 +60,17 @@ router.get('/', ensureAuthenticated, function(req, res){
 function insertOrgInfo(req, res, context, org_code_list){
 	var list_length = org_code_list.length;
 	var org_info_object = {};
-
+	
+	console.log(org_code_list);
+	
 	for (var i = 0; i < list_length; i++){
 		Organization.getOrganizationByCode(org_code_list[i], function(err, organization){			
 			org_info_object[organization.code] = organization; 
 			
 			if (Object.keys(org_info_object).length == list_length){
 				context.orgs = org_info_object;
+				
+				console.log(org_info_object)
 				
 				/*
 				 * Fetches next data item for context, which is account_type

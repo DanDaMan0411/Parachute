@@ -4,14 +4,13 @@
 		{{#if orgs}}
 			<h3>Organizations I Am In</h3>
 			{{#each orgs}}
-				<ul class="list-group">
-					<form id="org_info_form" method="get" action="/orgs/">
-						<input name="org_code" type="hidden" value="{{this.code}}">
-						<a onClick="submitOrgInfoForm()" type="submit" class="list-group-item">
-							{{this.name}}
-						</a>
-					</form>
-				</ul>
+				<form method="get" action="/orgs/">
+					<input name="org_code" type="hidden" value="{{this.code}}">
+					<a onClick="submitOrgInfoForm(this)" type="submit" class="list-group-item">
+						{{this.name}}
+					</a>
+				</form>
+		
 			{{/each}}
 		{{/if}}
 	</ul>
@@ -28,9 +27,9 @@
 		{{#if orgs}}
 			<h3>Organizations I Lead</h3>
 			{{#each orgs}}
-				<form id="org_info_form" method="get" action="/orgs/">
+				<form method="get" action="/orgs/">
 					<input name="org_code" type="hidden" value="{{this.code}}">
-					<a onClick="submitOrgInfoForm()" type="submit" class="list-group-item">
+					<a onClick="submitOrgInfoForm(this)" type="submit" class="list-group-item">
 						{{this.name}}
 					</a>
 				</form>
