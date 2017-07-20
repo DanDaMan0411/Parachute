@@ -4,6 +4,7 @@ var router = express.Router();
 var _ = require('underscore');
 
 var User = require('../models/user');
+var Inbox = require('../models/inbox');
 var Organization = require('../models/organization');
 
 
@@ -19,6 +20,8 @@ var Organization = require('../models/organization');
 //>>orgs
 //
 //>>is_student, is_counselor, is_teacher
+//
+//>>inbox
 ////////////////////////////////////////
 router.get('/', ensureAuthenticated, function(req, res){
 	var context = {
@@ -65,7 +68,7 @@ function insertOrgInfo(req, res, context, org_code_list){
 		
 	for (var i = 0; i < list_length; i++){
 		Organization.getOrganizationByCode(org_code_list[i], function(err, organization){			
-			org_info_list.push(organization) 
+			org_info_list.push(organization) ;
 			
 			if (org_info_list.length == list_length){
 				/*
@@ -110,7 +113,52 @@ function insertAccountTypeInfo(req, res, context, account_type){
 	context.is_counselor = is_counselor;
 	context.is_teacher = is_teacher;
 	
-	loadIndexPage(req, res, context);
+	/*
+	 * Fetches next data item for context, which is inbox
+	 */
+	insertInboxInfo(req, res, context, req.user.inbox)
+}
+
+/*
+ * Uses user's inbox codes and finds them inside
+ * inbox database and replaces the code with the 
+ * full inbox message information so that it can 
+ * be useful to the user
+ */
+function insertInboxInfo(req, res, context, inbox_code_list){
+	var list_length = inbox_code_list.length;
+	var inbox_info_list = [];
+	
+	if (list_length > 0){
+		for (var i = 0; i < list_length; i++){
+			Inbox.getInboxById(inbox_code_list[i], function(err, inbox){			
+				inbox_info_list.push(inbox); 
+				
+				if (inbox_info_list.length == list_length){
+					/*
+					 * The _.sortBy sorts the org_info_list in 
+					 * alphabetical order based on the name.
+					 * 
+					 * Without it, the list is randomly ordered
+					 * each time the page is loaded
+					 * 
+					 * .reverse() sorts messages so 
+					 *  newest message appears on top
+					 */
+					context.inbox = _.sortBy(inbox_info_list, 'timestamp').reverse();
+									
+					
+					loadIndexPage(req, res, context);
+				}
+			});
+		}
+	}else{
+		/*
+		 * Runs if user has no inbox messages.
+		 * Skips the whole sorting inbox info process.
+		 */
+		loadIndexPage(req, res, context);
+	}
 }
 
 /*

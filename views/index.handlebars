@@ -39,10 +39,10 @@
 {{/if}}
 
 <!-- Trigger the modal with a button -->
-<button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">View Inbox</button>
+<button type="button" class="btn btn-info" data-toggle="modal" data-target="#view_inbox_modal">View Inbox</button>
 
 <!-- Modal -->
-<div class="modal fade" id="myModal" role="dialog">
+<div class="modal fade" id="view_inbox_modal" data-backdrop="static" role="dialog">
 	<div class="modal-dialog">
 		<!-- Modal content-->
 		<div class="modal-content">
@@ -51,7 +51,32 @@
 				<h4 class="modal-title">Inbox</h4>
 			</div>
 			<div class="modal-body">
-				<p>Inbox Message</p>
+				{{#each inbox}}
+					<div class="panel-body">
+						<ul class="list-group">
+							<li class="list-group-item">
+								<div class="row">
+									<div class="col-xs-10 col-md-11">
+										<div>
+											<div>{{this.sender}}</div>
+											<div class="mic-info">
+												{{this.timestamp}}
+											</div>
+										</div>
+										<hr />
+										<div class="inbox-message-text">
+											{{this.message}}
+										</div>
+										{{#if this.can_reply}}
+											<a  href="#" class="btn btn-sm btn-hover btn-primary" href="#reply" ><span class="glyphicon glyphicon-share-alt" style="padding-right:3px;"></span>Reply</a>
+										{{/if}}
+										<a href="#" class="btn btn-sm btn-hover btn-danger"><span class="glyphicon glyphicon-remove" style="padding-right:3px;"></span>Delete</a>
+									</div>
+								</div>
+							</li>
+						</ul>
+					</div>
+				{{/each}}
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
