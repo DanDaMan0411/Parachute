@@ -346,7 +346,9 @@ function handleUserJoinOrg(err, organization, org_code, req, res){
 				 */
 				var updated_members = organization.members;
 				
-				organization.update({members: updated_members.concat(req.user.username)}, throwError);
+				organization.update({members: updated_members.concat(req.user.username)}, function(err, result){
+					
+				});
 				////
 				
 				/*

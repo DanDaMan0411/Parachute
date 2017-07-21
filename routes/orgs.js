@@ -5,7 +5,9 @@ var User = require('../models/user');
 var Organization = require('../models/organization');
 var Inbox = require('../models/inbox');
 
-var notification_vars = require('../variables/notifications')
+var notification_vars = require('../variables/notifications');
+
+var inbox_functions = require('../functions/inbox_functions');
 
 /*
  * Displays page of queried organization
@@ -47,7 +49,7 @@ router.get('/', ensureAuthenticated, function(req, res){
 router.post('/leave_org', ensureAuthenticated, function(req, res){
 	var org_code = req.body.org_code;
 	
-	removeUserFromOrg(req.user.username, org_code, function(org_name){
+	removeUserFromOrg(req, req.user.username, org_code, function(org_name){
 		/*
 		 * redirect happens here to fetch 
 		 * the organization's name
@@ -101,7 +103,7 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 			 * Should always be the case, but just precautionary
 			 */
 			if (user){
-				handleNewInboxMsg(user, message, id, sender, can_reply, function(){
+				inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, function(){
 					req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
 					res.redirect('back');
 				});
@@ -112,33 +114,6 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 		});
 	}
 });
-
-/*
- * Adds new inbox message id to user's inbox list in database
- * Then adds new inbox message to inbox schema database
- */
-function handleNewInboxMsg(user, message, id, sender, can_reply, callback){
-	var new_inbox = user.inbox;
-				
-	user.update({inbox: new_inbox.concat(id)}, function(err, result){
-		if (err) throw err;
-		
-		var newInbox = new Inbox({
-			message: message,
-			id: id,
-			sender: sender,
-			can_reply: can_reply,
-			recipient: user.username,
-		});
-		
-		Inbox.createInbox(newInbox, function(err, inbox){
-			if(err) throw err;
-		});
-		
-		callback()
-	});
-}
-
 
 
 /*
@@ -165,12 +140,14 @@ router.post('/rem_user', ensureAuthenticated, function(req, res){
  * or
  * counselor wants to remove user from their organization
  */
-function removeUserFromOrg(req, username, org_code, redirectDestination){ 
-	 /*
+function removeUserFromOrg(req, username, org_code, callback){ 
+	/*
 	 * Removes user as a member of the organization
 	 */
 	Organization.getOrganizationByCode(org_code, function(err, org){
 		if (err) throw err;
+		
+		console.log("org_code: " + org_code + " END")
 		
 		var new_members = org.members;
 		
@@ -219,14 +196,14 @@ function removeUserFromOrg(req, username, org_code, redirectDestination){
 					var sender = req.user.username;
 					var can_reply = false;
 					
-					handleNewInboxMsg(user, message, id, sender, can_reply, function(undefined, undefined){
+					inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, function(undefined, undefined){
 						
 					});
 				});
 			});		
 		});
 		
-		redirectDestination(org.name);
+		callback(org.name);
 	});
 }
 
