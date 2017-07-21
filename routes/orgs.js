@@ -5,6 +5,8 @@ var User = require('../models/user');
 var Organization = require('../models/organization');
 var Inbox = require('../models/inbox');
 
+var notification_vars = require('../variables/notifications')
+
 /*
  * Displays page of queried organization
  */
@@ -99,12 +101,15 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 			 * Should always be the case, but just precautionary
 			 */
 			if (user){
-				handleNewInboxMsg(user, message, id, sender, can_reply, recipient, req, res);
+				handleNewInboxMsg(user, message, id, sender, can_reply, function(){
+					req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
+					res.redirect('back');
+				});
 			}else{
 				req.flash('error_msg', 'User you wanted to send message to not found.');
 				res.redirect('back');
 			}
-		})
+		});
 	}
 });
 
@@ -112,7 +117,7 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
  * Adds new inbox message id to user's inbox list in database
  * Then adds new inbox message to inbox schema database
  */
-function handleNewInboxMsg(user, message, id, sender, can_reply, recipient, req, res){
+function handleNewInboxMsg(user, message, id, sender, can_reply, callback){
 	var new_inbox = user.inbox;
 				
 	user.update({inbox: new_inbox.concat(id)}, function(err, result){
@@ -123,15 +128,14 @@ function handleNewInboxMsg(user, message, id, sender, can_reply, recipient, req,
 			id: id,
 			sender: sender,
 			can_reply: can_reply,
-			recipient: recipient,
+			recipient: user.username,
 		});
 		
 		Inbox.createInbox(newInbox, function(err, inbox){
 			if(err) throw err;
 		});
 		
-		req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
-		res.redirect('back');
+		callback()
 	});
 }
 
@@ -144,7 +148,7 @@ router.post('/rem_user', ensureAuthenticated, function(req, res){
 	var org_code = req.body.org_code;
 	var username = req.body.username;
 	
-	removeUserFromOrg(username, org_code, function(){
+	removeUserFromOrg(req, username, org_code, function(){
 		req.flash('success_msg', 'You have removed ' + username);
 	
 		/*
@@ -161,32 +165,7 @@ router.post('/rem_user', ensureAuthenticated, function(req, res){
  * or
  * counselor wants to remove user from their organization
  */
-function removeUserFromOrg(username, org_code, redirectDestination){
-	/*
-	 * Removes organization from user orgs list
-	 */
-	 User.getUserByUsername(username, function(err, user){
-		if (err) throw err;
-		
-		var new_orgs = user.orgs;
-		 
-		/*
-		 * Index of the org  wanted to leave
-		 */
-		var org_index = new_orgs.indexOf(org_code);
-		
-		/*
-		 * Makes sure org is in orgs list
-		 * Should always be the case, just precautionary
-		 */
-		if (org_index >= 0){
-			new_orgs.splice(org_index, 1);
-		}
-		
-		user.update({orgs: new_orgs}, throwError);
-	 });
-	 
-	 
+function removeUserFromOrg(req, username, org_code, redirectDestination){ 
 	 /*
 	 * Removes user as a member of the organization
 	 */
@@ -208,11 +187,51 @@ function removeUserFromOrg(username, org_code, redirectDestination){
 			new_members.splice(user_index, 1);
 		}
 				
-		org.update({members: new_members}, throwError);
+		org.update({members: new_members}, function(err, result){
+			
+			/*
+			 * Removes organization from user orgs list
+			 * 
+			 * Also sends user an inbox message notifying
+			 * them that they were removed from the organization
+			 */
+			 User.getUserByUsername(username, function(err, user){
+				if (err) throw err;
+				
+				var new_orgs = user.orgs;
+				 
+				/*
+				 * Index of the org  wanted to leave
+				 */
+				var org_index = new_orgs.indexOf(org_code);
+				
+				/*
+				 * Makes sure org is in orgs list
+				 * Should always be the case, just precautionary
+				 */
+				if (org_index >= 0){
+					new_orgs.splice(org_index, 1);
+				}
+				
+				user.update({orgs: new_orgs}, function(err, result){
+					var message = notification_vars.removeUserMessage(org.name);
+					var id = generateRandomString();
+					var sender = req.user.username;
+					var can_reply = false;
+					
+					handleNewInboxMsg(user, message, id, sender, can_reply, function(undefined, undefined){
+						
+					});
+				});
+			});		
+		});
 		
 		redirectDestination(org.name);
 	});
 }
+
+
+
 
 
 

@@ -21,7 +21,7 @@ var InboxSchema = mongoose.Schema({
 	
 	viewed: {
 		type: Boolean,
-		default: true
+		default: false
 	},
 	
 	timestamp: {
