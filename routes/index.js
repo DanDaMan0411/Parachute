@@ -284,6 +284,25 @@ router.get('/org_code', ensureAuthenticated, ensureStudent, function(req, res){
 
 
 
+router.post('/delete_msg', ensureAuthenticated, function(req, res){
+	var message_id = req.body.message_id;
+	
+	User.getUserByUsername(req.user.username, function(err, user){
+		if (err) throw err;
+		
+		var new_inbox = user.inbox;
+		
+		var inbox_index = new_inbox.indexOf(message_id);
+		
+		if (inbox_index >= 0){
+			new_inbox.splice(inbox_index, 1);
+		}
+		
+		user.update({inbox: new_inbox}, function(err, result){});
+	});
+});
+
+
 
 /*
 * Handles input when user submits an organization code to join

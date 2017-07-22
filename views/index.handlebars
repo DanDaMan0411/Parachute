@@ -70,13 +70,14 @@
 										{{#if this.can_reply}}
 											<a  href="#" class="btn btn-sm btn-hover btn-primary" href="#reply" ><span class="glyphicon glyphicon-share-alt" style="padding-right:3px;"></span>Reply</a>
 										{{/if}}
-										<a href="#" class="btn btn-sm btn-hover btn-danger"><span class="glyphicon glyphicon-remove" style="padding-right:3px;"></span>Delete</a>
+										<a onClick="deleteInboxMessage('{{this.id}}', this)" href="#" class="btn btn-sm btn-hover btn-danger"><span class="glyphicon glyphicon-remove" style="padding-right:3px;"></span>Delete</a>
 									</div>
 								</div>
 							</li>
 						</ul>
 					</div>
 				{{/each}}
+				
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

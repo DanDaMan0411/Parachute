@@ -9,3 +9,15 @@
 function submitOrgInfoForm(org){
 	org.parentElement.submit();
 }
+
+
+function deleteInboxMessage(message_id, message){
+	$.post('/delete_msg',{
+		message_id: message_id
+	})
+	
+	/*
+	 * Visually deletes the inbox message element
+	 */
+	message.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.removeChild(message.parentNode.parentNode.parentNode.parentNode.parentNode);
+}
