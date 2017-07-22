@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
+var url = require('url');
+
 var User = require('../models/user');
 var Organization = require('../models/organization');
 var Inbox = require('../models/inbox');
@@ -14,6 +16,7 @@ var inbox_functions = require('../functions/inbox_functions');
  */
 router.get('/', ensureAuthenticated, function(req, res){
 	var org_code = req.query['org_code'];
+	
 	Organization.getOrganizationByCode(org_code, function(err, org){
 		/*
 		 * If organization exists, fetches
@@ -26,6 +29,13 @@ router.get('/', ensureAuthenticated, function(req, res){
 				is_student: isStudent(req.user.account_type),
 				user_in_org: isStudentInOrg(org.members, req.user.username)
 			}
+			
+			/*
+			 * Used for accessing org_code
+			 * while dealing with an org page
+			 * and can't get queried code
+			 */
+			req.session.currentOrg = org_code;
 			
 			res.render('org_page', context);
 		
@@ -46,16 +56,33 @@ router.get('/', ensureAuthenticated, function(req, res){
 /*
  * Leaves requested organization
  */
-router.post('/leave_org', ensureAuthenticated, function(req, res){
+router.post('/leave_org', ensureAuthenticated, ensureStudent, function(req, res){
 	var org_code = req.body.org_code;
 	
-	removeUserFromOrg(req, req.user.username, org_code, function(org_name){
+	removeUserFromOrg(req, req.user.username, org_code, function(org){
 		/*
-		 * redirect happens here to fetch 
-		 * the organization's name
+		 * The user that would usually be passed through this function
+		 * above is the user himself when the message should be intended
+		 * for the recipient which is the organization leader
 		 */
-		req.flash('success_msg', 'You have left the ' + org_name);
-		res.redirect('/');
+		User.getUserByUsername(org.leader, function(err, user){
+			var message = notification_vars.userLeftOrgMessage(org.name, user.username);
+			var id = inbox_functions.generateRandomString();
+			var sender = req.user.username;
+			var can_reply = false;
+			var recipient = user.username
+			
+			inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, recipient, function(undefined, undefined){
+				
+			});
+			
+			/*
+			 * redirect happens here to fetch 
+			 * the organization's name
+			 */
+			req.flash('success_msg', 'You have left the ' + org.name);
+			res.redirect('/');
+		})
 	});
 });
 
@@ -63,14 +90,14 @@ router.post('/leave_org', ensureAuthenticated, function(req, res){
 
 
 
-/*
- * Leaves requested organization
- */
-router.post('/send_msg', ensureAuthenticated, function(req, res){
+
+router.post('/send_msg', ensureAuthenticated, ensureCounselor, function(req, res){
 	var message = req.body.message;
-	var id = generateRandomString();
+	var id = inbox_functions.generateRandomString();
 	var sender = req.user.username;
 	var recipient = req.body.recipient;
+	
+	var org_code = req.session.currentOrg;
 	
 	/*
 	 * If checked, value will be 'on'
@@ -98,19 +125,32 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 		User.getUserByUsername(recipient, function(err, user){
 			if (err) throw err;
 			
-			/*
-			 * Checks to see if recipient exists
-			 * Should always be the case, but just precautionary
-			 */
-			if (user){
-				inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, function(){
-					req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
+			Organization.getOrganizationByCode(org_code, function(err, org){
+				
+				/*
+				 * Security measure to make sure the recipient
+				 * of the message is actually inside the organization
+				 */
+				if (isStudentInOrg(org.members, user.username)){
+					/*
+					 * Checks to see if recipient exists
+					 * Should always be the case, but just precautionary
+					 */
+					if (user){
+						inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, recipient, function(){
+							req.flash('success_msg', 'Message to ' + recipient + ' has been sent');
+							res.redirect('back');
+						});
+					}else{
+						req.flash('error_msg', 'User you wanted to send message to not found.');
+						res.redirect('back');
+					}
+				}else{
+					req.flash('error_msg', 'Desired recipient is not in the organization.');
 					res.redirect('back');
-				});
-			}else{
-				req.flash('error_msg', 'User you wanted to send message to not found.');
-				res.redirect('back');
-			}
+				}
+			})
+			
 		});
 	}
 });
@@ -119,11 +159,21 @@ router.post('/send_msg', ensureAuthenticated, function(req, res){
 /*
  * Removes specified user from desired organization
  */
-router.post('/rem_user', ensureAuthenticated, function(req, res){
+router.post('/rem_user', ensureAuthenticated, ensureCounselor, function(req, res){
 	var org_code = req.body.org_code;
 	var username = req.body.username;
 	
-	removeUserFromOrg(req, username, org_code, function(){
+	removeUserFromOrg(req, username, org_code, function(org, user){
+		var message = notification_vars.removeUserMessage(org.name);
+		var id = inbox_functions.generateRandomString();
+		var sender = req.user.username;
+		var can_reply = false;
+		var recipient = user.username
+		
+		inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, recipient, function(undefined, undefined){
+			
+		});
+		
 		req.flash('success_msg', 'You have removed ' + username);
 	
 		/*
@@ -146,9 +196,7 @@ function removeUserFromOrg(req, username, org_code, callback){
 	 */
 	Organization.getOrganizationByCode(org_code, function(err, org){
 		if (err) throw err;
-		
-		console.log("org_code: " + org_code + " END")
-		
+			
 		var new_members = org.members;
 		
 		/*
@@ -190,20 +238,16 @@ function removeUserFromOrg(req, username, org_code, callback){
 					new_orgs.splice(org_index, 1);
 				}
 				
-				user.update({orgs: new_orgs}, function(err, result){
-					var message = notification_vars.removeUserMessage(org.name);
-					var id = generateRandomString();
-					var sender = req.user.username;
-					var can_reply = false;
-					
-					inbox_functions.handleNewInboxMsg(user, message, id, sender, can_reply, function(undefined, undefined){
-						
-					});
-				});
+				user.update({orgs: new_orgs}, function(err, result){});
+				
+				/*
+				 * The user that is passed here is the 
+				 * user who is getting removed from the 
+				 * organization
+				 */
+				callback(org, user);
 			});		
 		});
-		
-		callback(org.name);
 	});
 }
 
@@ -268,13 +312,33 @@ function ensureAuthenticated(req, res, next){
 }
 
 
-
+/*
+ * Requires user to have a student account type to access
+ * Attatched to pages that only students should be able to see
+ */
+function ensureStudent(req, res, next){
+	if (req.user.account_type === "s"){
+		return next();
+	}else{
+		req.flash('error_msg', 'The page you requested is for students only.');
+		res.redirect('/');
+	}
+}
 
 /*
- * Generates a string roughly 20 characters long
+ * Requires user to have a counselor account type to access
+ * Attatched to pages that only counselors should be able to see
  */
-function generateRandomString(){
-	return (Math.random()*1e32).toString(36);
+function ensureCounselor(req, res, next){
+	if (req.user.account_type === "c" || req.user.account_type === "t"){
+		return next();
+	}else{
+		req.flash('error_msg', 'The page you requested is for counselors only.');
+		res.redirect('/');
+	}
 }
+
+
+
 
 module.exports = router;

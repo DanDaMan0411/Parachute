@@ -7,7 +7,9 @@ var User = require('../models/user');
 var Inbox = require('../models/inbox');
 var Organization = require('../models/organization');
 
+var notification_vars = require('../variables/notifications');
 
+var inbox_functions = require('../functions/inbox_functions');
 
 ////////////////////////////////////////
 //Data Fetch Structure order
@@ -347,12 +349,18 @@ function handleUserJoinOrg(err, organization, org_code, req, res){
 				var updated_members = organization.members;
 				
 				organization.update({members: updated_members.concat(req.user.username)}, function(err, result){
-					
+				
 				});
 				////
 				
+				
+				User.getUserByUsername(organization.leader, function(err, org_leader){
+					sendUserJoinMessage(user, org_leader, organization);
+				})
+				
+				
 				/*
-				 * If successful, redirects back to dashboard displaying success message
+				 * Redirects back to dashboard displaying success message
 				 */
 				req.flash('success_msg', 'You have joined the ' + organization.name + '!');
 				res.redirect('/');
@@ -370,7 +378,19 @@ function checkUserInOrg(user_orgs, org_code){
 	return (user_orgs).indexOf(org_code) >= 0;
 }
 
+/*
+ * Sends organization owner a notification 
+ * message of a new user joining
+ */
+function sendUserJoinMessage(user, org_leader, organization){
+	var message = notification_vars.newUserInOrgMessage(organization.name, user.username)
+	var id = inbox_functions.generateRandomString();
+	var sender = user.username;
+	var can_reply = false;
+	var recipient = org_leader.username;
 
+	inbox_functions.handleNewInboxMsg(org_leader, message, id, sender, can_reply, recipient, function(){});
+}
 
 
 
