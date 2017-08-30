@@ -12,7 +12,7 @@ var mongo = require('mongodb');
 var mongoose = require('mongoose');
 
 //Database connection
-mongoose.connect('mongodb://localhost/loginapp');
+mongoose.connect('mongodb://test:123@ds161823.mlab.com:61823/parachutebeta');
 var db = mongoose.connection;
 
 var orgs = require('./routes/orgs');
