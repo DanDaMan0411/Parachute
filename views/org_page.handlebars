@@ -12,6 +12,19 @@
 			</form>
 		{{/if}}
 	{{/if}}
+	
+	{{#if is_counselor}}
+		<h3>Organization Settings</h3>
+		<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+			 <span class="caret"></span>
+		</button>
+		<form id="org_settings_form" method="post" action="orgs/update_orgs_settings">
+			
+		</form>
+		<ul class="dropdown-menu">
+			<li>Invite Only</li>
+		</ul>
+	{{/if}}
 </div>
 {{#if is_counselor}}
 	<div>
